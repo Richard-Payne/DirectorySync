@@ -48,11 +48,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/richard/git/DirectorySync/fs-sync.csproj",
+      "projectUniqueName": "/home/richard/projects/DirectorySync/fs-sync.csproj",
       "projectName": "fs-sync",
-      "projectPath": "/home/richard/git/DirectorySync/fs-sync.csproj",
+      "projectPath": "/home/richard/projects/DirectorySync/fs-sync.csproj",
       "packagesPath": "/home/richard/.nuget/packages/",
-      "outputPath": "/home/richard/git/DirectorySync/obj/",
+      "outputPath": "/home/richard/projects/DirectorySync/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "/home/richard/.nuget/NuGet/NuGet.Config"
@@ -97,7 +97,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/home/richard/.local/opt/dotnet/sdk/3.1.101/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/home/richard/.local/opt/dotnet-sdk-3.1/sdk/3.1.101/RuntimeIdentifierGraph.json"
       }
     }
   }

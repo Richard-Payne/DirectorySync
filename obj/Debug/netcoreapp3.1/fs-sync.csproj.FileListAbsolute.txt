@@ -16,3 +16,16 @@
 /home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.AssemblyInfo.cs
 /home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.dll
 /home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.pdb
+/home/richard/projects/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.csprojAssemblyReference.cache
+/home/richard/projects/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.AssemblyInfoInputs.cache
+/home/richard/projects/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.AssemblyInfo.cs
+/home/richard/projects/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.dll
+/home/richard/projects/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.pdb
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.deps.json
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.runtimeconfig.json
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.runtimeconfig.dev.json
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.pdb
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/CommandLine.dll
+/home/richard/projects/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.csproj.CopyComplete
