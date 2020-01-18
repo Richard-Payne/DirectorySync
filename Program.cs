@@ -8,18 +8,18 @@ namespace fs_sync
 {
     class Program
     {
-        public class Options
-        {   
-            [Option(SetName="new")]
-            public bool New { get; set; }
 
-            [Option(SetName="new")]
+        [Verb("new", HelpText = "Create a new sync set")]
+        public class Options
+        {           
             [Value(0)]
             public string PathA { get; set; }
 
-            [Option(SetName="new")]
             [Value(1)]
             public string PathB { get; set; }
+
+            [Option(shortName: 'o', longName: "output")]
+            public string StatusFile { get; set; }
         }
 
         private static Options options;
