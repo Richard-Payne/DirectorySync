@@ -43,19 +43,19 @@
     ]
   },
   "packageFolders": {
-    "/home/richard.payne@spreadex.com/.nuget/packages/": {}
+    "/home/richard/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/richard.payne@spreadex.com/git/fs-sync/fs-sync.csproj",
+      "projectUniqueName": "/home/richard/git/DirectorySync/fs-sync.csproj",
       "projectName": "fs-sync",
-      "projectPath": "/home/richard.payne@spreadex.com/git/fs-sync/fs-sync.csproj",
-      "packagesPath": "/home/richard.payne@spreadex.com/.nuget/packages/",
-      "outputPath": "/home/richard.payne@spreadex.com/git/fs-sync/obj/",
+      "projectPath": "/home/richard/git/DirectorySync/fs-sync.csproj",
+      "packagesPath": "/home/richard/.nuget/packages/",
+      "outputPath": "/home/richard/git/DirectorySync/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/richard.payne@spreadex.com/.nuget/NuGet/NuGet.Config"
+        "/home/richard/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "netcoreapp3.1"
@@ -97,7 +97,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/3.1.101/RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/home/richard/.local/opt/dotnet/sdk/3.1.101/RuntimeIdentifierGraph.json"
       }
     }
   }

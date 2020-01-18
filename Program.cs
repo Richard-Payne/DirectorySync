@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.Linq;
+using System;
 using System.IO;
 using CommandLine;
 
@@ -23,10 +24,12 @@ namespace fs_sync
                 options = o;
             });
 
-            var sourceFiles = new DirectoryParser().Parse(options.SourcePath);
-            var destFiles = new DirectoryParser().Parse(options.DestinationPath);
+            var sourceFiles = new DirectoryParser().Parse(options.SourcePath).Select(fi => new SyncItem<FileInfo>(fi.Name, fi));
+            var destFiles = new DirectoryParser().Parse(options.DestinationPath).Select(fi => new SyncItem<FileInfo>(fi.Name, fi));;
 
-            
+            var syncer = new Syncer<FileInfo>((a, b) => a.item.LastWriteTimeUtc > b.item.LastWriteTimeUtc ? a : a.item.LastWriteTimeUtc < b.item.LastWriteTimeUtc ? b : null);
+            var changeset = syncer.GetChangeSet(sourceFiles, destFiles, null);            
+            syncer.Sync(changeset);
         }
     }
 }

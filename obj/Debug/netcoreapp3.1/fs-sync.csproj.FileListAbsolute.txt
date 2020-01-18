@@ -11,3 +11,8 @@
 /home/richard.payne@spreadex.com/git/fs-sync/obj/Debug/netcoreapp3.1/fs-sync.csproj.CopyComplete
 /home/richard.payne@spreadex.com/git/fs-sync/obj/Debug/netcoreapp3.1/fs-sync.dll
 /home/richard.payne@spreadex.com/git/fs-sync/obj/Debug/netcoreapp3.1/fs-sync.pdb
+/home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.csprojAssemblyReference.cache
+/home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.AssemblyInfoInputs.cache
+/home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.AssemblyInfo.cs
+/home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.dll
+/home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.pdb
