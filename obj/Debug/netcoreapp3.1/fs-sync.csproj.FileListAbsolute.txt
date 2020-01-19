@@ -29,3 +29,12 @@
 /home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.pdb
 /home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/CommandLine.dll
 /home/richard/projects/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.csproj.CopyComplete
+/home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync
+/home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.deps.json
+/home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.runtimeconfig.json
+/home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.runtimeconfig.dev.json
+/home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.dll
+/home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/fs-sync.pdb
+/home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/CommandLine.dll
+/home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/Newtonsoft.Json.dll
+/home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.csproj.CopyComplete

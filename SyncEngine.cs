@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-public class Syncer<T> {
+public class SyncEngine<T> {
 
-    private Func<SyncItem<T>, SyncItem<T>, SyncItem<T>> matcher;
+    private Func<SyncItem<T>,SyncItem<T>,SyncItem<T>> matcher;
 
-    public Syncer(Func<SyncItem<T>, SyncItem<T>, SyncItem<T>> matcher) {
+    public SyncEngine(Func<SyncItem<T>,SyncItem<T>,SyncItem<T>> matcher) {
         this.matcher = matcher ?? throw new ArgumentNullException(nameof(matcher));
     }
 
@@ -42,31 +42,34 @@ public class Syncer<T> {
                 op.DeleteFromA = true;
                 op.DeleteFromStatus = true;
             } else if (itemB != null && itemStatus == null) {
-                op.Item = matcher(itemA, itemB);
-                if (op.Item == null) {
+                var match = matcher(itemA, itemB);
+                if (match == null) {
                     op.Reason = "New identical items in A and B";
-                    op.Item = itemA;
                 } else {
-                    op.Reason = "New differing items in A and B";
+                    op.Item = match;
+                    op.Reason = "Simultaneous updates in A and B";
                     op.CopyToA = op.Item.Id != itemA.Id;
                     op.CopyToB = op.Item.Id != itemB.Id;
                 }
                 op.AddToStatus = true;
             } else {
-                op.Item = matcher(matcher(itemA, itemB) ?? itemA, itemStatus);
-                if (op.Item != null) {
+                var match = matcher(matcher(itemA, itemB) ?? itemA, itemStatus);
+                if (match != null) {
+                    op.Item = match;
                     op.CopyToA = op.Item.Id != itemA.Id;
                     op.CopyToB = op.Item.Id != itemB.Id;
-                    op.AddToStatus = op.Item?.Id != itemStatus.Id;
+                    op.UpdateStatus = op.Item?.Id != itemStatus.Id;
                 }                
             }             
-            if (op.Item != null)   
-                ops.Add(op.Item.Id, op);
+  
+            ops.Add(op.Item.Id, op);
         } 
 
         Console.WriteLine("");
         Console.WriteLine("PROCESSING SET B");
         foreach(var itemB in setB) {
+            Console.WriteLine($"itemB = ${itemB.ToString()}");
+            Console.WriteLine(string.Join(",", ops.Keys));
             if (ops.Where(o => o.Value.Item.Key == itemB.Key).Count() > 0) {
                 Console.WriteLine($"Item {itemB.Key} in setB skipped. Already set to be processed.");
                 continue;
@@ -104,10 +107,6 @@ public class Syncer<T> {
 
         return ops.Values.ToList();
     }
-
-    public void Sync(IList<SyncOperation<T>> ops) {
-
-    }
 }
 
 public class SyncItem<T> {
@@ -138,7 +137,8 @@ public class SyncOperation<T> {
     public string Reason { get; set; }
     public bool CopyToB { get; set; }
     public bool CopyToA { get; set; }
-    public bool AddToStatus { get; set; }        
+    public bool AddToStatus { get; set; }
+    public bool UpdateStatus { get; set; }
     public bool DeleteFromA { get; set; }
     public bool DeleteFromB { get; set; }
     public bool DeleteFromStatus { get; set; }                

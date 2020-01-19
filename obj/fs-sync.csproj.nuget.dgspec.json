@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/home/richard/projects/DirectorySync/fs-sync.csproj": {}
+    "/home/richard/git/DirectorySync/fs-sync.csproj": {}
   },
   "projects": {
-    "/home/richard/projects/DirectorySync/fs-sync.csproj": {
+    "/home/richard/git/DirectorySync/fs-sync.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/richard/projects/DirectorySync/fs-sync.csproj",
+        "projectUniqueName": "/home/richard/git/DirectorySync/fs-sync.csproj",
         "projectName": "fs-sync",
-        "projectPath": "/home/richard/projects/DirectorySync/fs-sync.csproj",
+        "projectPath": "/home/richard/git/DirectorySync/fs-sync.csproj",
         "packagesPath": "/home/richard/.nuget/packages/",
-        "outputPath": "/home/richard/projects/DirectorySync/obj/",
+        "outputPath": "/home/richard/git/DirectorySync/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/home/richard/.nuget/NuGet/NuGet.Config"
@@ -39,6 +39,14 @@
             "CommandLineParser": {
               "target": "Package",
               "version": "[2.7.82, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.3, )"
+            },
+            "serilog": {
+              "target": "Package",
+              "version": "[2.9.0, )"
             }
           },
           "imports": [
@@ -56,7 +64,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/home/richard/.local/opt/dotnet-sdk-3.1/sdk/3.1.101/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/home/richard/.local/opt/dotnet/sdk/3.1.101/RuntimeIdentifierGraph.json"
         }
       }
     }
