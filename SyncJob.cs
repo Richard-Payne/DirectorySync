@@ -7,22 +7,22 @@ namespace DirectorySync {
     public class SyncJob
     {
         public SyncJob(string pathA, string pathB, string logPath, bool debug)
-            : this(pathA, pathB, new List<SyncStatusLine>(), logPath, debug)
+            : this(pathA, pathB, new List<FileStatusLine>(), logPath, debug)
         { }
 
         [JsonConstructor]
-        public SyncJob(string pathA, string pathB, IList<SyncStatusLine> statusLines, string logPath, bool debug)
+        public SyncJob(string pathA, string pathB, IList<FileStatusLine> statusLines, string logPath, bool debug)
         {
             this.Debug = debug;
             this.LogPath = logPath;
             this.PathA = pathA ?? throw new ArgumentNullException(nameof(pathA));
             this.PathB = pathB ?? throw new ArgumentNullException(nameof(pathB));
-            this.StatusLines = statusLines ?? new List<SyncStatusLine>();
+            this.StatusLines = statusLines ?? new List<FileStatusLine>();
         }
 
         public string PathA { get; }
         public string PathB { get; }
-        public IList<SyncStatusLine> StatusLines { get; }
+        public IList<FileStatusLine> StatusLines { get; }
         public string LogPath { get; }
         public bool Debug { get; }
 
@@ -39,7 +39,7 @@ namespace DirectorySync {
         }
     }
 
-    public class SyncStatusLine
+    public class FileStatusLine
     {
         public string Key { get; set; }
         public DateTime LastModified { get; set; }

@@ -40,13 +40,13 @@ namespace DirectorySync
             
             var logger = new LoggerFactory()
                 .AddSerilog(new LoggerConfiguration()
-                    .MinimumLevel.Is(syncJob.Debug ? LogEventLevel.Debug : LogEventLevel.Information)                
-                    .WriteTo.Console(restrictedToMinimumLevel: LogEventLevel.Information, outputTemplate: "{Message:lj}{NewLine}")
+                    .MinimumLevel.Is(options.Debug ? LogEventLevel.Debug : LogEventLevel.Information)                
+                    .WriteTo.Console(restrictedToMinimumLevel: options.Realtime ? LogEventLevel.Warning : LogEventLevel.Information, outputTemplate: "{Message:lj}{NewLine}")
                     .WriteTo.File(syncJob.LogPath, rollingInterval: Serilog.RollingInterval.Day)
                     .CreateLogger())
                 .CreateLogger("sync_run");
 
-            var syncEngine = new SyncEngine<SyncStatusLine>(logger, (a,b) => FileMatcher(a ,b));
+            var syncEngine = new SyncEngine<FileStatusLine>(logger, FileMatcher);
             var fileSyncer = new FileSyncer(logger);                
             
             var sourceFiles = new DirectoryParser().Parse(syncJob.PathA)
@@ -56,7 +56,7 @@ namespace DirectorySync
                                 .Select(fi => CreateSyncItem(fi, syncJob.PathB))
                                 .ToHashSet();
             var statusLines = syncJob.StatusLines
-                                .Select(sl => new SyncItem<SyncStatusLine>("", sl.Key, sl))
+                                .Select(sl => new SyncItem<FileStatusLine>("", sl.Key, sl))
                                 .ToHashSet();
 
             var changeset = syncEngine.GetChangeSet(sourceFiles, destFiles, statusLines);            
@@ -71,57 +71,43 @@ namespace DirectorySync
             if (options.Realtime) {
                 logger.LogInformation("");
                 logger.LogInformation("Entering realtime file system monitoring...");
-                var fileMonitor = new RealtimeFileMonitor(fileSyncer);
-                fileMonitor.Monitor(syncJob);
+                var fileMonitor = new RealtimeFileMonitor(logger, syncEngine, fileSyncer);
+                fileMonitor.Monitor(syncJob, options.SyncJobFile);
 
                 while(true) {
                     System.Threading.Thread.Sleep(1);
                 }
             }
 
-            SyncItem<SyncStatusLine> CreateSyncItem(FileInfo fileInfo, string basePath) {
+            SyncItem<FileStatusLine> CreateSyncItem(FileInfo fileInfo, string basePath) {
                 string key = Path.GetRelativePath(basePath, fileInfo.FullName);
-                var syncLine = new SyncStatusLine { 
+                var syncLine = new FileStatusLine { 
                     Key = key,
                     LastModified = fileInfo.LastWriteTimeUtc
                 };
-                return new SyncItem<SyncStatusLine>(fileInfo.FullName, key, syncLine);
-            }            
+                return new SyncItem<FileStatusLine>(fileInfo.FullName, key, syncLine);
+            }
 
-            SyncItem<SyncStatusLine> FileMatcher(SyncItem<SyncStatusLine> a, SyncItem<SyncStatusLine> b) {
+            SyncItem<FileStatusLine> FileMatcher(SyncItem<FileStatusLine> a, SyncItem<FileStatusLine> b) {
                 logger.LogDebug($"Conflict Resolution: A = {a.Item.LastModified.ToString()}, B = {b.Item.LastModified.ToString()}");
                 return a.Item.LastModified > b.Item.LastModified ? a : a.Item.LastModified < b.Item.LastModified ? b : null;
             }
 
             void PrintOperations() {
-                Log("changeset size = " + changeset.Count());
                 if (changeset.Count() > 0) {
                     Log("Operations to perform:");
                     int maxKeyLen = changeset.Select(s => s.Item.Key.Length).Max() + 2;
                     foreach (var op in changeset) {
-                        int padding = maxKeyLen - op.Item.Key.Length;
-                        string opLine = $"{new string(' ', 4)}{op.Item.Key}{new string(' ', padding)}";
-                        if (op.CopyToA) opLine += $"copyToA{new string(' ', 5)}";
-                        if (op.CopyToB) opLine += $"copyToB{new string(' ', 5)}";
-                        if (op.DeleteFromA) opLine += $"deleteFromA{new string(' ', 2)}";
-                        if (op.DeleteFromB) opLine += $"deleteFromB{new string(' ', 2)}";
-                        if (!(op.CopyToA || op.CopyToB || op.DeleteFromA || op.DeleteFromB)) opLine += $"{new string(' ', 12)}";
-                        if (op.AddToStatus) opLine += $"addToStatus{new string(' ', 7)}";
-                        if (op.UpdateStatus) opLine += $"updateStatus{new string(' ', 6)}";
-                        if (op.DeleteFromStatus) opLine += $"deleteFromStatus{new string(' ', 2)}";
-                        if (!(op.AddToStatus || op.UpdateStatus || op.DeleteFromStatus || op.DeleteFromB)) opLine += $"{new string(' ', 18)}";
-                        opLine += op.Reason;
-                        Log(opLine);
+                        if (op.GetFileOp() == "" && op.GetStatusOp() == "")
+                            continue;
+                        Log(op.ToString(maxKeyLen));
                     }
                 } else {
                     Log("\tDirectories are in-sync");
                 }
 
                 void Log(string message) {
-                    if (options.Force)
-                        logger.LogDebug(message);
-                    else
-                        logger.LogInformation(message);
+                    logger.LogInformation(message);
                 }
             }
 

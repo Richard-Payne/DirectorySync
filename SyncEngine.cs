@@ -31,12 +31,50 @@ namespace DirectorySync
             foreach(SyncItem<T> itemA in setA) {
                 SyncItem<T> itemB = setB.Where(itemB => itemA.Key == itemB.Key).FirstOrDefault();
                 SyncItem<T> itemStatus = status.Where(itemStatus => itemA.Key == itemStatus.Key).FirstOrDefault();
-
-                logger.LogDebug($"itemA = {itemA?.ToString() ?? "null"}");
-                logger.LogDebug($"itemB = {itemB?.ToString() ?? "null"}");
-                logger.LogDebug($"itemStatus = {itemStatus?.ToString() ?? "null"}");            
                             
-                var op = new SyncOperation<T>(itemA);
+                var op = GetOpForKey(itemA, itemB, itemStatus);
+                ops.Add(op.Item.Key, op);
+            } 
+
+            logger.LogDebug("");
+            logger.LogDebug("PROCESSING SET B");
+            foreach(var itemB in setB) {
+                if (ops.Where(o => o.Value.Item.Key == itemB.Key).Count() > 0) {
+                    logger.LogDebug($"Item {itemB.Key} in setB skipped. Already set to be processed.");
+                    continue;
+                }
+
+                SyncItem<T> itemStatus = status.Where(itemStatus => itemB.Key == itemStatus.Key).FirstOrDefault();
+
+                var op = GetOpForKey(null, itemB, itemStatus);
+                ops.Add(op.Item.Key, op);
+            }
+
+            logger.LogDebug("");
+            logger.LogDebug("PROCESSING STATUS");
+            foreach(var itemStatus in status) {
+                if (ops.Where(o => o.Value.Item.Key == itemStatus.Key).Count() > 0) 
+                    continue;
+
+                var op = GetOpForKey(null, null, itemStatus);
+                ops.Add(op.Item.Key, op);
+            }
+            
+            logger.LogDebug("");
+            logger.LogDebug("PROCESSING DONE");
+            logger.LogDebug("");
+
+            return ops.Values.ToList();
+        }
+
+        public SyncOperation<T> GetOpForKey(SyncItem<T> itemA, SyncItem<T> itemB, SyncItem<T> itemStatus) {
+            logger.LogDebug($"itemA = {itemA?.ToString() ?? "null"}");
+            logger.LogDebug($"itemB = {itemB?.ToString() ?? "null"}");
+            logger.LogDebug($"itemStatus = {itemStatus?.ToString() ?? "null"}");
+
+            var op = new SyncOperation<T>(itemA ?? itemB ?? itemStatus);
+
+            if (itemA != null) {                                           
                 if (itemB == null && itemStatus == null) {
                     op.Reason = "New item in A";
                     op.CopyToB = true;
@@ -74,22 +112,10 @@ namespace DirectorySync
                     }             
                 }             
     
-                ops.Add(op.Item.Key, op);
+                return op;
             } 
 
-            logger.LogDebug("");
-            logger.LogDebug("PROCESSING SET B");
-            foreach(var itemB in setB) {
-                logger.LogDebug($"itemB = ${itemB.ToString()}");
-                logger.LogDebug($"ops = {string.Join(",", ops.Keys)}");
-                if (ops.Where(o => o.Value.Item.Key == itemB.Key).Count() > 0) {
-                    logger.LogDebug($"Item {itemB.Key} in setB skipped. Already set to be processed.");
-                    continue;
-                }
-
-                SyncItem<T> itemStatus = status.Where(itemStatus => itemB.Key == itemStatus.Key).FirstOrDefault();
-
-                var op = new SyncOperation<T>(itemB);
+            if (itemB != null) {
                 if (itemStatus == null) {
                     op.Reason = "New item in B";
                     op.CopyToA = true;
@@ -99,26 +125,16 @@ namespace DirectorySync
                     op.DeleteFromB = true;
                     op.DeleteFromStatus = true;
                 }
-                ops.Add(op.Item.Key, op);
+                return op;
             }
 
-            logger.LogDebug("");
-            logger.LogDebug("PROCESSING STATUS");
-            foreach(var itemStatus in status) {
-                if (ops.Where(o => o.Value.Item.Key == itemStatus.Key).Count() > 0) 
-                    continue;
-
-                var op = new SyncOperation<T>(itemStatus);
+            if (itemStatus != null) {
                 op.Reason = "Item removed from A and B";
                 op.DeleteFromStatus = true;
-                ops.Add(op.Item.Key, op);
+                return op;
             }
-            
-            logger.LogDebug("");
-            logger.LogDebug("PROCESSING DONE");
-            logger.LogDebug("");
 
-            return ops.Values.ToList();
+            return null;
         }
     }
 

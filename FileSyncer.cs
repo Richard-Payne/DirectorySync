@@ -14,10 +14,15 @@ namespace DirectorySync {
             this.logger = logger;
         }
 
-        public void Sync(SyncJob job, IList<SyncOperation<SyncStatusLine>> ops)
+        public void Sync(SyncJob job, IList<SyncOperation<FileStatusLine>> ops)
         {
             foreach (var op in ops)
             {
+                if (op?.Item == null) {
+                    logger.LogInformation("Nothing to do");
+                    continue;
+                }
+
                 string fileA = Path.Join(job.PathA, op.Item.Key);
                 string fileB = Path.Join(job.PathB, op.Item.Key);
                 if (op.CopyToA)
@@ -46,7 +51,7 @@ namespace DirectorySync {
                 {
                     var statusLine = job.StatusLines.Where(sl => sl.Key == op.Item.Key).SingleOrDefault();
                     if (statusLine != null) throw new DuplicateNameException($"The key already exists in the sync job status. {op.Item.Key}");
-                    job.StatusLines.Add(new SyncStatusLine { Key = op.Item.Key, LastModified = op.Item.Item.LastModified });
+                    job.StatusLines.Add(new FileStatusLine { Key = op.Item.Key, LastModified = op.Item.Item.LastModified });
                 }
                 if (op.DeleteFromStatus)
                 {
