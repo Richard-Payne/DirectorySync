@@ -70,11 +70,12 @@ namespace DirectorySync
                                     .Select(fi => CreateSyncItem(fi, syncJob.PathB))
                                     .ToHashSet();
                 logger.LogInformation($"Parsing PathB ({syncJob.PathB}) took {stopwatch.Elapsed.TotalSeconds} seconds");
+                stopwatch.Restart();
                 var statusLines = syncJob.StatusLines
                                     .Select(sl => new SyncItem<FileStatusLine>("", sl.Key, sl))
-                                    .ToHashSet();
+                                    .ToHashSet();                
+                logger.LogInformation($"Parsing Job Status took {stopwatch.Elapsed.TotalSeconds} seconds");
                 Console.WriteLine(new string(' ', Console.WindowWidth));
-
                 stopwatch.Restart();
                 var changeset = syncEngine.GetChangeSet(sourceFiles, destFiles, statusLines);
                 logger.LogInformation($"Calculating changeset took {stopwatch.Elapsed.TotalSeconds} seconds");
