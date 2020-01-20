@@ -38,3 +38,17 @@
 /home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/CommandLine.dll
 /home/richard/git/DirectorySync/bin/Debug/netcoreapp3.1/Newtonsoft.Json.dll
 /home/richard/git/DirectorySync/obj/Debug/netcoreapp3.1/fs-sync.csproj.CopyComplete
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Microsoft.Extensions.Configuration.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Microsoft.Extensions.Configuration.Abstractions.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Microsoft.Extensions.Configuration.Binder.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Microsoft.Extensions.DependencyInjection.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Microsoft.Extensions.DependencyInjection.Abstractions.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Microsoft.Extensions.Logging.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Microsoft.Extensions.Logging.Abstractions.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Microsoft.Extensions.Options.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Microsoft.Extensions.Primitives.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Newtonsoft.Json.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Serilog.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Serilog.Extensions.Logging.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Serilog.Sinks.File.dll
+/home/richard/projects/DirectorySync/bin/Debug/netcoreapp3.1/Serilog.Sinks.Console.dll
