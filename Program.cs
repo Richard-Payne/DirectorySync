@@ -49,10 +49,10 @@ namespace DirectorySync
             var syncEngine = new SyncEngine<FileStatusLine>(logger, FileMatcher);
             var fileSyncer = new FileSyncer(logger);                
             
-            var sourceFiles = new DirectoryParser().Parse(syncJob.PathA)
+            var sourceFiles = new DirectoryParser(logger).Parse(syncJob.PathA)
                                 .Select(fi => CreateSyncItem(fi, syncJob.PathA))
                                 .ToHashSet();
-            var destFiles = new DirectoryParser().Parse(syncJob.PathB)
+            var destFiles = new DirectoryParser(logger).Parse(syncJob.PathB)
                                 .Select(fi => CreateSyncItem(fi, syncJob.PathB))
                                 .ToHashSet();
             var statusLines = syncJob.StatusLines
