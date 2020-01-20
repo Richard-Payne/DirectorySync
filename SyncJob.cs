@@ -6,25 +6,27 @@ using Newtonsoft.Json;
 namespace DirectorySync {
     public class SyncJob
     {
-        public SyncJob(string pathA, string pathB, string logPath, bool debug)
-            : this(pathA, pathB, new List<FileStatusLine>(), logPath, debug)
+        public SyncJob(string pathA, string pathB, string logPath, int logFileLimit)
+            : this(pathA, pathB, new List<FileStatusLine>(), logPath, -1, logFileLimit)
         { }
 
         [JsonConstructor]
-        public SyncJob(string pathA, string pathB, IList<FileStatusLine> statusLines, string logPath, bool debug)
+        public SyncJob(string pathA, string pathB, IList<FileStatusLine> statusLines, string logPath, int currentPid, int logFileLimit)
         {
-            this.Debug = debug;
             this.LogPath = logPath;
             this.PathA = pathA ?? throw new ArgumentNullException(nameof(pathA));
             this.PathB = pathB ?? throw new ArgumentNullException(nameof(pathB));
             this.StatusLines = statusLines ?? new List<FileStatusLine>();
+            this.CurrentPid = currentPid;
+            this.LogFileLimit = logFileLimit;
         }
 
         public string PathA { get; }
         public string PathB { get; }
         public IList<FileStatusLine> StatusLines { get; }
         public string LogPath { get; }
-        public bool Debug { get; }
+        public int CurrentPid { get; set; }
+        public int LogFileLimit { get; }
 
         public void Save(string outputFile)
         {

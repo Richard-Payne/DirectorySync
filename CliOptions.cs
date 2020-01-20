@@ -18,7 +18,10 @@ namespace DirectorySync
         public string LogDirectory { get; set; }
 
         [Option(shortName: 'd', longName: "debug", HelpText = "Enable debug level logging")]
-        public bool Debug { get; set; }        
+        public bool Debug { get; set; } 
+
+        [Option(shortName: 'c', longName: "log-file-count", HelpText = "Limit the number of daily log files to keep")]
+        public int LogFileLimit { get; set; }
     }
 
     [Verb("sync", HelpText = "Run a folder sync")]

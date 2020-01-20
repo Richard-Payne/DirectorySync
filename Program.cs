@@ -26,9 +26,9 @@ namespace DirectorySync
             SyncJob syncJob, oldSyncJob;
             if (File.Exists(options.SyncJobFile)) {
                 oldSyncJob = SyncJob.Load(options.SyncJobFile);                
-                syncJob = new SyncJob(options.PathA, options.PathB, oldSyncJob.StatusLines, options.LogDirectory, options.Debug);
+                syncJob = new SyncJob(options.PathA, options.PathB, oldSyncJob.StatusLines, options.LogDirectory, oldSyncJob.CurrentPid, options.LogFileLimit);
             } else {
-                syncJob = new SyncJob(options.PathA, options.PathB, options.LogDirectory, options.Debug);
+                syncJob = new SyncJob(options.PathA, options.PathB, options.LogDirectory, options.LogFileLimit);
             }
             
             syncJob.Save(options.SyncJobFile);
@@ -37,95 +37,119 @@ namespace DirectorySync
         static void RunSyncJob(SyncOptions options) {
 
             var syncJob = SyncJob.Load(options.SyncJobFile);
-            
-            var logger = new LoggerFactory()
-                .AddSerilog(new LoggerConfiguration()
-                    .MinimumLevel.Is(options.Debug ? LogEventLevel.Debug : LogEventLevel.Information)                
-                    .WriteTo.Console(restrictedToMinimumLevel: options.Realtime ? LogEventLevel.Warning : LogEventLevel.Information, outputTemplate: "{Message:lj}{NewLine}")
-                    .WriteTo.File(syncJob.LogPath, rollingInterval: Serilog.RollingInterval.Day)
-                    .CreateLogger())
-                .CreateLogger("sync_run");
 
-            var syncEngine = new SyncEngine<FileStatusLine>(logger, FileMatcher);
-            var fileSyncer = new FileSyncer(logger);                
-            
-            var sourceFiles = new DirectoryParser(logger).Parse(syncJob.PathA)
-                                .Select(fi => CreateSyncItem(fi, syncJob.PathA))
-                                .ToHashSet();
-            var destFiles = new DirectoryParser(logger).Parse(syncJob.PathB)
-                                .Select(fi => CreateSyncItem(fi, syncJob.PathB))
-                                .ToHashSet();
-            var statusLines = syncJob.StatusLines
-                                .Select(sl => new SyncItem<FileStatusLine>("", sl.Key, sl))
-                                .ToHashSet();
-
-            var changeset = syncEngine.GetChangeSet(sourceFiles, destFiles, statusLines);            
-            
-            PrintOperations();
-            if (!GetUserConfirmation())
+            // only allow one instance running against any sync file
+            if (syncJob.CurrentPid > 0 && Process.GetProcessesByName(Process.GetCurrentProcess().ProcessName).Select(p => p.Id).Contains(syncJob.CurrentPid)) {
+                Console.WriteLine($"Unable to run sync on {options.SyncJobFile}. Sync already running in process {syncJob.CurrentPid}");
                 return;
+            }
 
-            fileSyncer.Sync(syncJob, changeset);
+            syncJob.CurrentPid = Process.GetCurrentProcess().Id;
             syncJob.Save(options.SyncJobFile);
+            
+            try {
+                var logger = new LoggerFactory()
+                    .AddSerilog(new LoggerConfiguration()
+                        .MinimumLevel.Is(options.Debug ? LogEventLevel.Debug : LogEventLevel.Information)                
+                        .WriteTo.Console(restrictedToMinimumLevel: options.Realtime ? LogEventLevel.Warning : LogEventLevel.Information, outputTemplate: "{Message:lj}{NewLine}")
+                        .WriteTo.File(syncJob.LogPath, rollingInterval: Serilog.RollingInterval.Day, retainedFileCountLimit: syncJob.LogFileLimit)
+                        .CreateLogger())
+                    .CreateLogger("sync_run");
 
-            if (options.Realtime) {
-                logger.LogInformation("");
-                logger.LogInformation("Entering realtime file system monitoring...");
-                var fileMonitor = new RealtimeFileMonitor(logger, syncEngine, fileSyncer);
-                fileMonitor.Monitor(syncJob, options.SyncJobFile);
+                var syncEngine = new SyncEngine<FileStatusLine>(logger, FileMatcher);
+                var fileSyncer = new FileSyncer(logger);                
+                
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+                var sourceFiles = new DirectoryParser(logger).Parse(syncJob.PathA)
+                                    .Select(fi => CreateSyncItem(fi, syncJob.PathA))
+                                    .ToHashSet();
+                logger.LogInformation($"Parsing PathA ({syncJob.PathA}) took {stopwatch.Elapsed.TotalSeconds} seconds");
+                stopwatch.Restart();
+                var destFiles = new DirectoryParser(logger).Parse(syncJob.PathB)
+                                    .Select(fi => CreateSyncItem(fi, syncJob.PathB))
+                                    .ToHashSet();
+                logger.LogInformation($"Parsing PathB ({syncJob.PathB}) took {stopwatch.Elapsed.TotalSeconds} seconds");
+                var statusLines = syncJob.StatusLines
+                                    .Select(sl => new SyncItem<FileStatusLine>("", sl.Key, sl))
+                                    .ToHashSet();
+                Console.WriteLine(new string(' ', Console.WindowWidth));
 
-                while(true) {
-                    System.Threading.Thread.Sleep(1);
-                }
-            }
+                stopwatch.Restart();
+                var changeset = syncEngine.GetChangeSet(sourceFiles, destFiles, statusLines);
+                logger.LogInformation($"Calculating changeset took {stopwatch.Elapsed.TotalSeconds} seconds");
+                
+                PrintOperations();
+                if (!GetUserConfirmation())
+                    return;
 
-            SyncItem<FileStatusLine> CreateSyncItem(FileInfo fileInfo, string basePath) {
-                string key = Path.GetRelativePath(basePath, fileInfo.FullName);
-                var syncLine = new FileStatusLine { 
-                    Key = key,
-                    LastModified = fileInfo.LastWriteTimeUtc
-                };
-                return new SyncItem<FileStatusLine>(fileInfo.FullName, key, syncLine);
-            }
+                stopwatch.Restart();
+                fileSyncer.Sync(syncJob, changeset);
+                logger.LogInformation($"File sync took {stopwatch.Elapsed.TotalSeconds} seconds");
+                syncJob.Save(options.SyncJobFile);
 
-            SyncItem<FileStatusLine> FileMatcher(SyncItem<FileStatusLine> a, SyncItem<FileStatusLine> b) {
-                logger.LogDebug($"Conflict Resolution: A = {a.Item.LastModified.ToString()}, B = {b.Item.LastModified.ToString()}");
-                return a.Item.LastModified > b.Item.LastModified ? a : a.Item.LastModified < b.Item.LastModified ? b : null;
-            }
-
-            void PrintOperations() {
-                if (changeset.Count() > 0) {
-                    Log("Operations to perform:");
-                    int maxKeyLen = changeset.Select(s => s.Item.Key.Length).Max() + 2;
-                    foreach (var op in changeset) {
-                        if (op.GetFileOp() == "" && op.GetStatusOp() == "")
-                            continue;
-                        Log(op.ToString(maxKeyLen));
-                    }
-                } else {
-                    Log("\tDirectories are in-sync");
-                }
-
-                void Log(string message) {
-                    logger.LogInformation(message);
-                }
-            }
-
-            bool GetUserConfirmation() {
-                if (!options.Force) {
+                if (options.Realtime) {
                     logger.LogInformation("");
-                    logger.LogInformation("Confirm? (yes/NO): ");
-                    string confirm = Console.ReadLine();
-                    if (confirm.ToLower() != "yes") {
-                        logger.LogDebug("User cancelled sync");
-                        return false;
+                    logger.LogInformation("Entering realtime file system monitoring...");
+                    var fileMonitor = new RealtimeFileMonitor(logger, syncEngine, fileSyncer);
+                    fileMonitor.Monitor(syncJob, options.SyncJobFile);
+
+                    while(true) {
+                        System.Threading.Thread.Sleep(1);
                     }
-                    logger.LogDebug("Sync confirmed");
-                } else {
-                    logger.LogDebug("Force option set. Confirmation skipped");
                 }
-                return true;
-            }
+
+                SyncItem<FileStatusLine> CreateSyncItem(FileInfo fileInfo, string basePath) {
+                    string key = Path.GetRelativePath(basePath, fileInfo.FullName);
+                    var syncLine = new FileStatusLine { 
+                        Key = key,
+                        LastModified = fileInfo.LastWriteTimeUtc
+                    };
+                    return new SyncItem<FileStatusLine>(fileInfo.FullName, key, syncLine);
+                }
+
+                SyncItem<FileStatusLine> FileMatcher(SyncItem<FileStatusLine> a, SyncItem<FileStatusLine> b) {
+                    logger.LogDebug($"Conflict Resolution: A = {a.Item.LastModified.ToString()}, B = {b.Item.LastModified.ToString()}");
+                    return a.Item.LastModified > b.Item.LastModified ? a : a.Item.LastModified < b.Item.LastModified ? b : null;
+                }
+
+                void PrintOperations() {
+                    if (changeset.Count() > 0) {
+                        Log("Operations to perform:");
+                        int maxKeyLen = changeset.Select(s => s.Item.Key.Length).Max() + 2;
+                        foreach (var op in changeset) {
+                            if (op.GetFileOp() == "" && op.GetStatusOp() == "")
+                                continue;
+                            Log(op.ToString(maxKeyLen));
+                        }
+                    } else {
+                        Log("\tDirectories are in-sync");
+                    }
+
+                    void Log(string message) {
+                        logger.LogInformation(message);
+                    }
+                }
+
+                bool GetUserConfirmation() {
+                    if (!options.Force) {
+                        logger.LogInformation("");
+                        logger.LogInformation("Confirm? (yes/NO): ");
+                        string confirm = Console.ReadLine();
+                        if (confirm.ToLower() != "yes") {
+                            logger.LogDebug("User cancelled sync");
+                            return false;
+                        }
+                        logger.LogDebug("Sync confirmed");
+                    } else {
+                        logger.LogDebug("Force option set. Confirmation skipped");
+                    }
+                    return true;
+                }
+            } finally {
+                syncJob.CurrentPid = 0;
+                syncJob.Save(options.SyncJobFile);
+            }                
         }        
     }
 }
