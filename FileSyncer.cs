@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using System;
 
 namespace DirectorySync {
     public class FileSyncer
@@ -29,23 +30,23 @@ namespace DirectorySync {
                 {
                     logger.LogInformation($"Copy B -> A: {op.Item.Key}");       
                     Directory.CreateDirectory(Path.GetDirectoryName(fileA));
-                    File.Copy(fileB, fileA, true);                    
+                    Copy(fileB, fileA);                    
                 }
                 if (op.CopyToB)
                 {
                     logger.LogInformation($"Copy A -> B: {op.Item.Key}");
                     Directory.CreateDirectory(Path.GetDirectoryName(fileB));
-                    File.Copy(fileA, fileB, true);
+                    Copy(fileA, fileB);
                 }
                 if (op.DeleteFromA)
                 {
                     logger.LogInformation($"Delete From A: {op.Item.Key}");
-                    File.Delete(fileA);
+                    Delete(fileA);
                 }
                 if (op.DeleteFromB)
                 {
                     logger.LogInformation($"Delete From B: {op.Item.Key}");
-                    File.Delete(fileB);
+                    Delete(fileB);
                 }
                 if (op.AddToStatus)
                 {
@@ -63,6 +64,22 @@ namespace DirectorySync {
                     var statusLine = job.StatusLines.Where(sl => sl.Key == op.Item.Key).Single(); ;
                     statusLine.LastModified = op.Item.Item.LastModified;
                 }
+            }
+        }
+
+        private void Copy(string source, string dest) {
+            try { 
+                File.Copy(source, dest, true);
+            } catch(Exception ex) {
+                logger.LogError(ex, $"Error copying {source} to {dest}");
+            }
+        }
+
+        private void Delete(string file) {
+            try { 
+                File.Delete(file);
+            } catch(Exception ex) {
+                logger.LogError(ex, $"Error deleting {file}");
             }
         }
     }
