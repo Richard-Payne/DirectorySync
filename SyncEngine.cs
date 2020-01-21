@@ -22,10 +22,6 @@ namespace DirectorySync
 
             var ops = new Dictionary<string, SyncOperation<T>>();
 
-            logger.LogDebug($"setA = [{string.Join(",", setA.Select(i => i.Key))}]");
-            logger.LogDebug($"setB = [{string.Join(",", setB.Select(i => i.Key))}]");
-            logger.LogDebug($"status = [{string.Join(",", status.Select(i => i.Key))}]");
-
             logger.LogDebug("");
             logger.LogDebug("PROCESSING SET A");
             foreach(SyncItem<T> itemA in setA) {
@@ -77,12 +73,12 @@ namespace DirectorySync
             if (itemA != null) {                                           
                 if (itemB == null && itemStatus == null) {
                     op.Reason = "New item in A";
-                    op.CopyToB = true;
-                    op.AddToStatus = true;
+                    op.ItemOperation = ItemOperation.CopyToB;
+                    op.StatusOperation = StatusOperation.AddToStatus;
                 } else if (itemB == null && itemStatus != null) {
                     op.Reason = "Item removed from B";
-                    op.DeleteFromA = true;
-                    op.DeleteFromStatus = true;
+                    op.ItemOperation = ItemOperation.DeleteFromA;
+                    op.StatusOperation = StatusOperation.DeleteFromStatus;
                 } else if (itemB != null && itemStatus == null) {
                     var match = matcher(itemA, itemB);
                     if (match == null) {
@@ -90,24 +86,26 @@ namespace DirectorySync
                     } else {
                         op.Item = match;
                         op.Reason = "Simultaneous updates in A and B";
-                        op.CopyToA = op.Item.Id != itemA.Id;
-                        op.CopyToB = op.Item.Id != itemB.Id;
+                        op.ItemOperation = op.Item.Id != itemA.Id ? ItemOperation.CopyToA
+                                         : op.Item.Id != itemB.Id ? ItemOperation.CopyToB
+                                         : ItemOperation.None;
                     }
-                    op.AddToStatus = true;
+                    op.StatusOperation = StatusOperation.AddToStatus;
                 } else {
                     var match = matcher(itemA, itemB);
                     if (match != null) {
                         if (match.Id == itemA.Id) op.Reason = "Updated item in A";
                         else op.Reason = "Updated item in B";
                         op.Item = match;
-                        op.CopyToA = op.Item.Id != itemA.Id;
-                        op.CopyToB = op.Item.Id != itemB.Id;
-                        op.UpdateStatus = true;
+                        op.ItemOperation = op.Item.Id != itemA.Id ? ItemOperation.CopyToA
+                                         : op.Item.Id != itemB.Id ? ItemOperation.CopyToB
+                                         : ItemOperation.None;
+                        op.StatusOperation  = StatusOperation.UpdateStatus;
                     } else {
                         match = matcher(itemA, itemStatus);
                         if (match != null) {
                             op.Reason = "Identical simultaneous updates in A and B";
-                            op.UpdateStatus = true;
+                            op.StatusOperation  = StatusOperation.UpdateStatus;
                         }
                     }             
                 }             
@@ -118,19 +116,19 @@ namespace DirectorySync
             if (itemB != null) {
                 if (itemStatus == null) {
                     op.Reason = "New item in B";
-                    op.CopyToA = true;
-                    op.AddToStatus = true;    
+                    op.ItemOperation = ItemOperation.CopyToA;
+                    op.StatusOperation  = StatusOperation.AddToStatus;
                 } else {
                     op.Reason = "Item removed from A";
-                    op.DeleteFromB = true;
-                    op.DeleteFromStatus = true;
+                    op.ItemOperation = ItemOperation.DeleteFromB;
+                    op.StatusOperation  = StatusOperation.DeleteFromStatus;
                 }
                 return op;
             }
 
             if (itemStatus != null) {
                 op.Reason = "Item removed from A and B";
-                op.DeleteFromStatus = true;
+                op.StatusOperation  = StatusOperation.DeleteFromStatus;
                 return op;
             }
 

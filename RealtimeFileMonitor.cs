@@ -43,8 +43,7 @@ namespace DirectorySync
                 bool isA = e.FullPath.StartsWith(syncJob.PathA);
 
                 string key = Path.GetRelativePath(isA ? syncJob.PathA : syncJob.PathB, e.FullPath);
-                string counterPath = isA ? syncJob.PathB : syncJob.PathA;
-                string counterKey = Path.GetRelativePath(counterPath, e.FullPath);
+                string counterPath = Path.Join(isA ? syncJob.PathB : syncJob.PathA, key);
 
                 SyncItem<FileStatusLine> itemEvent = null;
                 if (e.ChangeType != WatcherChangeTypes.Deleted) {
@@ -53,9 +52,9 @@ namespace DirectorySync
 
                 SyncItem<FileStatusLine> itemCounter = null;
                 logger.LogDebug($"counterPath = {counterPath}");
-                if (File.Exists(Path.Join(counterPath, key))) {
+                if (File.Exists(counterPath)) {
                     logger.LogDebug($"counterPath exists");
-                    itemCounter = new SyncItem<FileStatusLine>(e.FullPath, key, new FileStatusLine {  Key = key, LastModified = (new FileInfo(e.FullPath)).LastWriteTimeUtc });
+                    itemCounter = new SyncItem<FileStatusLine>(counterPath, key, new FileStatusLine {  Key = key, LastModified = (new FileInfo(counterPath)).LastWriteTimeUtc });
                 }
 
                 SyncItem<FileStatusLine> itemStatus =  null;
@@ -76,7 +75,7 @@ namespace DirectorySync
                 var op = syncEngine.GetOpForKey(itemA, itemB, itemStatus);
                 var ops = new [] { op };
 
-                if (op != null && (op.GetFileOp() != "" || op.GetStatusOp() != "")) {
+                if (op != null && (op.ItemOperation != ItemOperation.None || op.StatusOperation != StatusOperation.None)) {
                     logger.LogInformation("Operation to perform:");
                     logger.LogInformation(op.ToString());
                 } else {

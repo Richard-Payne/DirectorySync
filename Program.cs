@@ -51,10 +51,16 @@ namespace DirectorySync
                 var logger = new LoggerFactory()
                     .AddSerilog(new LoggerConfiguration()
                         .MinimumLevel.Is(options.Debug ? LogEventLevel.Debug : LogEventLevel.Information)                
-                        .WriteTo.Console(restrictedToMinimumLevel: options.Realtime ? LogEventLevel.Warning : LogEventLevel.Information, outputTemplate: "{Message:lj}{NewLine}")
+                        .WriteTo.Console(restrictedToMinimumLevel: options.Quiet ? LogEventLevel.Warning : LogEventLevel.Information, outputTemplate: "{Message:lj}{NewLine}")
                         .WriteTo.File(syncJob.LogPath, rollingInterval: Serilog.RollingInterval.Day, retainedFileCountLimit: syncJob.LogFileLimit)
                         .CreateLogger())
                     .CreateLogger("sync_run");
+
+                logger.LogInformation("");
+                logger.LogInformation("------------------------------------------------");
+                logger.LogInformation($"START sync: {syncJob.PathA} <-> {syncJob.PathB}");
+                logger.LogInformation("------------------------------------------------");
+                logger.LogInformation("");
 
                 var syncEngine = new SyncEngine<FileStatusLine>(logger, FileMatcher);
                 var fileSyncer = new FileSyncer(logger);                
@@ -119,7 +125,7 @@ namespace DirectorySync
                         Log("Operations to perform:");
                         int maxKeyLen = changeset.Select(s => s.Item.Key.Length).Max() + 2;
                         foreach (var op in changeset) {
-                            if (op.GetFileOp() == "" && op.GetStatusOp() == "")
+                            if (op.ItemOperation == ItemOperation.None && op.StatusOperation == StatusOperation.None)
                                 continue;
                             Log(op.ToString(maxKeyLen));
                         }

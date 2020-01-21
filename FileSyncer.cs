@@ -26,43 +26,44 @@ namespace DirectorySync {
 
                 string fileA = Path.Join(job.PathA, op.Item.Key);
                 string fileB = Path.Join(job.PathB, op.Item.Key);
-                if (op.CopyToA)
-                {
-                    logger.LogInformation($"Copy B -> A: {op.Item.Key}");       
-                    Directory.CreateDirectory(Path.GetDirectoryName(fileA));
-                    Copy(fileB, fileA);                    
+
+                switch (op.ItemOperation) {
+                    case ItemOperation.CopyToA:
+                        logger.LogInformation($"Copy B -> A: {op.Item.Key}");       
+                        Directory.CreateDirectory(Path.GetDirectoryName(fileA));
+                        Copy(fileB, fileA);
+                        break;
+                    case ItemOperation.CopyToB:
+                        logger.LogInformation($"Copy A -> B: {op.Item.Key}");
+                        Directory.CreateDirectory(Path.GetDirectoryName(fileB));
+                        Copy(fileA, fileB);
+                        break;
+                    case ItemOperation.DeleteFromA:
+                        logger.LogInformation($"Delete From A: {op.Item.Key}");
+                        Delete(fileA);
+                        break;
+                    case ItemOperation.DeleteFromB:
+                        logger.LogInformation($"Delete From B: {op.Item.Key}");
+                        Delete(fileB);
+                        break;
                 }
-                if (op.CopyToB)
-                {
-                    logger.LogInformation($"Copy A -> B: {op.Item.Key}");
-                    Directory.CreateDirectory(Path.GetDirectoryName(fileB));
-                    Copy(fileA, fileB);
-                }
-                if (op.DeleteFromA)
-                {
-                    logger.LogInformation($"Delete From A: {op.Item.Key}");
-                    Delete(fileA);
-                }
-                if (op.DeleteFromB)
-                {
-                    logger.LogInformation($"Delete From B: {op.Item.Key}");
-                    Delete(fileB);
-                }
-                if (op.AddToStatus)
-                {
-                    var statusLine = job.StatusLines.Where(sl => sl.Key == op.Item.Key).SingleOrDefault();
-                    if (statusLine != null) throw new DuplicateNameException($"The key already exists in the sync job status. {op.Item.Key}");
-                    job.StatusLines.Add(new FileStatusLine { Key = op.Item.Key, LastModified = op.Item.Item.LastModified });
-                }
-                if (op.DeleteFromStatus)
-                {
-                    var statusLine = job.StatusLines.Where(sl => sl.Key == op.Item.Key).Single();
-                    job.StatusLines.Remove(statusLine);
-                }
-                if (op.UpdateStatus)
-                {
-                    var statusLine = job.StatusLines.Where(sl => sl.Key == op.Item.Key).Single(); ;
-                    statusLine.LastModified = op.Item.Item.LastModified;
+
+                var matchedLines = job.StatusLines.Where(sl => sl.Key == op.Item.Key);
+                FileStatusLine statusLine;
+                switch (op.StatusOperation) {
+                    case StatusOperation.AddToStatus:
+                        statusLine = matchedLines.SingleOrDefault();
+                        if (statusLine != null) throw new DuplicateNameException($"The key already exists in the sync job status. {op.Item.Key}");
+                        job.StatusLines.Add(new FileStatusLine { Key = op.Item.Key, LastModified = op.Item.Item.LastModified });
+                        break;
+                    case StatusOperation.UpdateStatus:
+                        statusLine = matchedLines.Single();
+                        statusLine.LastModified = op.Item.Item.LastModified;                    
+                        break;
+                    case StatusOperation.DeleteFromStatus:
+                        statusLine = matchedLines.Single();
+                        job.StatusLines.Remove(statusLine);
+                        break;
                 }
             }
         }
